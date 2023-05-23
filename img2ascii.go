@@ -11,8 +11,9 @@ import (
 type Config struct {
 	DMap      string // Density map
 	Reverse   bool   // Reverse density map
-	Scale     int
 	Extension string
+	NewWidth  int
+	NewHeight int
 }
 
 func (c *Config) GetDensityMapFromTextFile(path string) error {
@@ -43,7 +44,7 @@ func Generate(img io.Reader, c Config) ([][]string, error) {
 	}
 
 	rgbaPixels, _ := getPixelsFromImage(img, c)
-	ascii, _ := ToAscii(Resize(rgbaPixels, c.Scale), c.DMap)
+	ascii, _ := ToAscii(ResizeImage(rgbaPixels, c.NewHeight, c.NewWidth), c.DMap)
 	return ascii, nil
 }
 

@@ -2,6 +2,7 @@ package img2ascii
 
 import (
 	"errors"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -70,26 +71,48 @@ func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) Pixel {
 	return Pixel{int(r / 257), int(g / 257), int(b / 257), int(a / 257)}
 }
 
-func Resize(rgbaMatrix [][]Pixel, n int) [][]Pixel {
-	if n == 0 {
+func ResizeImage(rgbaMatrix [][]Pixel, newHeight, newWidth int) [][]Pixel {
+	if newHeight+newWidth == 0 {
 		return rgbaMatrix
 	}
 
-	return Resize(scale(rgbaMatrix), n-1)
-}
+	height := len(rgbaMatrix)
+	width := len(rgbaMatrix[0])
 
-func scale(rgbaMatrix [][]Pixel) [][]Pixel {
-	height, width := len(rgbaMatrix), len(rgbaMatrix[0])
-
-	var newMatrix [][]Pixel
-
-	for i := 0; i < height; i += 2 {
-		var tempRow []Pixel
-		for j := 0; j < width; j += 2 {
-			tempRow = append(tempRow, rgbaMatrix[i][j])
-		}
-		newMatrix = append(newMatrix, tempRow)
+	if newWidth == 0 {
+		newWidth = int(float64(newHeight*width) / float64(height))
 	}
 
-	return newMatrix
+	if newHeight == 0 {
+		newHeight = int(float64(newWidth*height) / float64(width))
+	}
+
+	fmt.Printf("[h: %v, w: %v] -> [h: %v, w: %v] \n", height, width, newHeight, newWidth)
+
+	// Calculate the scale factors for resizing
+	widthScale := float64(width) / float64(newWidth)
+	heightScale := float64(height) / float64(newHeight)
+
+	// Create a new matrix to store the resized pixels
+	resizedPixels := make([][]Pixel, newHeight)
+	for i := 0; i < newHeight; i++ {
+		resizedPixels[i] = make([]Pixel, newWidth)
+	}
+
+	// Resize the image
+	for y := 0; y < newHeight; y++ {
+		for x := 0; x < newWidth; x++ {
+			// Calculate the corresponding position in the original image
+			origX := int(float64(x) * widthScale)
+			origY := int(float64(y) * heightScale)
+
+			// Get the corresponding pixel in the original image
+			pixel := rgbaMatrix[origY][origX]
+
+			// Assign the resized pixel to the new matrix
+			resizedPixels[y][x] = pixel
+		}
+	}
+
+	return resizedPixels
 }
